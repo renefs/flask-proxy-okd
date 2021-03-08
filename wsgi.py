@@ -15,8 +15,10 @@ from secret import config
 app = Flask(__name__)
 app.config.from_object(config)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=app.config["LOGGING_LEVEL"])
 LOG = logging.getLogger("app.py")
+
+LOG.info("Application loaded")
 
 @app.route('/<path:url>', methods=["GET", "POST"])
 def root(url):
