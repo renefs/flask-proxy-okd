@@ -8,11 +8,13 @@ For example: http://localhost:5000/p/www.google.com
 import re
 import requests
 import logging
+from werkzeug.middleware.proxy_fix import ProxyFix
 from urllib.parse import urlparse, urlunparse
 from flask import Flask, render_template, request, abort, Response, redirect
 from secret import config
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app)
 app.config.from_object(config)
 
 logging.basicConfig(level=app.config["LOGGING_LEVEL"])
