@@ -63,7 +63,7 @@ def proxy(url):
 
 
 def make_request(url, method, headers={}, data=None):
-    url = 'http://%s' % url
+    url = 'https://%s' % url
     # Ensure the URL is approved, else abort
     if not is_approved(url):
         LOG.warn("URL is not approved: %s", url)
@@ -73,7 +73,7 @@ def make_request(url, method, headers={}, data=None):
     referer = request.headers.get('referer')
     if referer:
         proxy_ref = proxied_request_info(referer)
-        headers.update({ "referer" : "http://%s/%s" % (proxy_ref[0], proxy_ref[1])})
+        headers.update({ "referer" : "https://%s/%s" % (proxy_ref[0], proxy_ref[1])})
 
     # Fetch the URL, and stream it back
     LOG.debug("Sending %s %s with headers: %s and data %s", method, url, headers, data)
