@@ -72,7 +72,7 @@ def make_request(url, method, headers={}, data=None):
 
     # Fetch the URL, and stream it back
     LOG.debug("Sending [%s] %s with headers: %s and data %s", method, url, headers, data)
-    result =  requests.request(method, url, params=request.args, stream=True, allow_redirects=False, data=data)
+    result =  requests.request(method, url, params=request.args, stream=True, allow_redirects=False, data=data, verify=False)
     return result
 
 def is_approved(url):
