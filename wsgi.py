@@ -10,7 +10,7 @@ import requests
 import logging
 from werkzeug.middleware.proxy_fix import ProxyFix
 from urllib.parse import urlparse, urlunparse
-from flask import Flask, render_template, request, abort, Response, redirect
+from flask import Flask, render_template, request, abort, Response, redirect, make_response
 from secret import config
 
 app = Flask(__name__)
@@ -50,15 +50,10 @@ def proxy(url):
         LOG.warning("Proxy request without a path was sent, redirecting assuming '/': %s -> %s/" % (url, url))
         return redirect(urlunparse(parts._replace(path=parts.path+'/')))
 
-    LOG.debug("%s %s with headers: %s", request.method, url, request.headers)
+    LOG.debug("[%s] %s with headers: %s", request.method, url, request.headers)
     r = make_request(url, request.method, dict(request.headers), request.form)
     LOG.debug("Got %s response from %s",r.status_code, url)
-    headers = dict(r.raw.headers)
-    def generate():
-        for chunk in r.raw.stream(decode_content=False):
-            yield chunk
-    out = Response(generate(), headers=headers)
-    out.status_code = r.status_code
+    out = make_response(r.text,r.status_code)
     return out
 
 
@@ -66,7 +61,7 @@ def make_request(url, method, headers={}, data=None):
     url = 'https://%s' % url
     # Ensure the URL is approved, else abort
     if not is_approved(url):
-        LOG.warn("URL is not approved: %s", url)
+        LOG.warning("URL is not approved: %s", url)
         abort(403)
 
     # Pass original Referer for subsequent resource requests
@@ -76,8 +71,9 @@ def make_request(url, method, headers={}, data=None):
         headers.update({ "referer" : "https://%s/%s" % (proxy_ref[0], proxy_ref[1])})
 
     # Fetch the URL, and stream it back
-    LOG.debug("Sending %s %s with headers: %s and data %s", method, url, headers, data)
-    return requests.request(method, url, params=request.args, stream=True, headers=headers, allow_redirects=False, data=data)
+    LOG.debug("Sending [%s] %s with headers: %s and data %s", method, url, headers, data)
+    result =  requests.request(method, url, params=request.args, stream=True, allow_redirects=False, data=data)
+    return result
 
 def is_approved(url):
     """Indicates whether the given URL is allowed to be fetched.  This
@@ -102,3 +98,6 @@ def proxied_request_info(proxy_url):
     proxied_tail = urlunparse(parts._replace(scheme="", netloc="", path=proxied_path))
     LOG.debug("Referred by proxy host, uri: %s, %s", proxied_host, proxied_tail)
     return [proxied_host, proxied_tail]
+
+if __name__ == '__main__':
+    app.run()
