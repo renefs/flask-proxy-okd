@@ -10,10 +10,11 @@ import requests
 import logging
 from urllib.parse import urlparse, urlunparse
 from flask import Flask, render_template, request, abort, Response, redirect
-from secret.config import APPROVED_HOSTS, CHUNK_SIZE
+from secret import config
 
+app = Flask(__name__)
+app.config.from_object(config)
 
-app = Flask(__name__.split('.')[0])
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger("app.py")
 
@@ -78,7 +79,7 @@ def is_approved(url):
     """Indicates whether the given URL is allowed to be fetched.  This
     prevents the server from becoming an open proxy"""
     parts = urlparse(url)
-    return parts.netloc in APPROVED_HOSTS
+    return parts.netloc in app.config["APPROVED_HOSTS"]
 
 def proxied_request_info(proxy_url):
     """Returns information about the target (proxied) URL given a URL sent to
